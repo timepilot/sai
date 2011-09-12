@@ -1,5 +1,7 @@
 put files in /sai
 
 *todo*
-bootloader
 testing
+
+*dep*
+vim
