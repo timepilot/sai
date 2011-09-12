@@ -1,5 +1,18 @@
 #!/bin/bash
 
+inform() {
+	tput setaf 4
+	echo ":: $1"
+	tput sgr0
+}
+
+ask() {
+	tput setaf 6
+	echo -n "!! $1? "
+	read ans
+	tput sgr0
+}
+
 sai_chroot() {
 	chroot $DESTDIR "$@"
 }
@@ -8,38 +21,59 @@ rc_conf() {
 	sed -i -e "s|^$1=.*|$1=$2|" $DESTDIR/etc/rc.conf
 }
 
-inform() {
-	tput setaf 4
-	echo ":: $1"
-	tput sgr0
-	sleep 1
+formatdisk() {
+	local _part=$1
+	local _fstype=$2
+	local _mp=$3
+}
+
+finddisks() {
+	workdir="$PWD"
+	cd /sys/block
+	ls | grep '^[hs]d'
+	cd "$workdir"
+}
+
+findpartitions() {
+	workdir="$PWD"
+	for disk in $(finddisks); do
+		cd /sys/block/$disk
+		for part in $disk*; do
+			if [ -d $part ]; then
+				echo "$part"
+			fi
+		done
+	done
 }
 
 # chroot_mount()
 # prepares target system as a chroot
 #
 chroot_mount() {
-    [ -e "$DESTDIR/sys" ] || mkdir "$DESTDIR/sys"
-    [ -e "$DESTDIR/proc" ] || mkdir "$DESTDIR/proc"
-    [ -e "$DESTDIR/dev" ] || mkdir "$DESTDIR/dev"
-    mount -t sysfs sysfs "$DESTDIR/sys"
-    mount -t proc proc "$DESTDIR/proc"
-    mount -o bind /dev "$DESTDIR/dev"
+	[ -e "$DESTDIR/sys" ] || mkdir "$DESTDIR/sys"
+	[ -e "$DESTDIR/proc" ] || mkdir "$DESTDIR/proc"
+	[ -e "$DESTDIR/dev" ] || mkdir "$DESTDIR/dev"
+	mount -t sysfs sysfs "$DESTDIR/sys"
+	mount -t proc proc "$DESTDIR/proc"
+	mount -o bind /dev "$DESTDIR/dev"
 }
 
 # chroot_umount()
 # tears down chroot in target system
 #
 chroot_umount() {
-    umount $DESTDIR/proc $DESTDIR/sys $DESTDIR/dev
+	umount $DESTDIR/proc $DESTDIR/sys $DESTDIR/dev
 }
 
-sai_report() {
-	is_ok "sai_partition" $sai_partition_ret
-	is_ok "sai_installpkgs" $sai_installpkgs_ret
-	is_ok "sai_config" $sai_config_ret
-	is_ok "sai_initcpio" $sai_initcpio_ret
-	is_ok "sai_bootloader" $sai_bootloader_ret
+disccapacity() {
+	fdisk -l $1 2>/dev/null | sed -n '2p' | cut -d' ' -f5
+}
+
+availdisks() {
+	for disc in $(finddisks); do
+		size=$(disccapacity /dev/$disc)
+		echo "$disc: $((size / 2**20)) MiB ($((size / 2**30)) GiB)"
+	done
 }
 
 # $1 var

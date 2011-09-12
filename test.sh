@@ -1,4 +1,4 @@
 #!/bin/bash
+source sai_lib
 
-source ait_lib
-inform 123
+	availdisks

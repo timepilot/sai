@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DESTDIR="/mnt/sai_target"
+TMP="/tmp/sai"
 
 source /sai/sai_lib
 source /sai/sai_config
@@ -10,10 +11,40 @@ sai_start() {
 	chroot_mount
 }
 
-sai_partition() {
+sai_prepare() {
 	inform $FUNCNAME
-	cfdisk
-	sai_partition_ret=$?
+	# cfdisk
+	availdisks
+	ask "pick a disk to partition?"
+	cfdisk "/dev/$ans"
+	
+	prt=$TMP/part
+	# mountpount
+	availdisks
+	ask "select a partition for swap? (type 'no' if dont need one) "
+	if [ $ans != "no" ]; then
+		echo "$ans:swap:swap" >> $prt
+	fi
+	ask "select a partition for '/'? "
+	echo "$ans:ext4:/" >> $prt
+	
+	ask "select a partition for '/boot'? (type 'no' if dont need one) "
+	if [ $ans != "no" ]; then
+		echo "$ans:ext4:swap" >> $prt
+	fi
+	
+	ask "sai asks you to use 'vim' to double-check everything. type enter to continue."
+	vim $prt
+	
+	
+	for line in $(cat $prt); do
+		PART=$(echo $line | cut -d: -f 1)
+		FSTYPE=$(echo $line | cut -d: -f 2)
+		MP=$(echo $line | cut -d: -f 3)
+		formatdisk $PART $FSTYPE $MP
+		sleep 1
+	done
+	sai_prepare_ret=$?
 }
 
 sai_installpkgs() {
@@ -22,18 +53,33 @@ sai_installpkgs() {
 	sai_installpkgs_ret=$?
 }
 
-sai_initcpio() {
+sai_postconfig() {
 	inform $FUNCNAME
-	sai_chroot mkinitcpio -p linux
-	sai_initcpio_ret=$?
+	sai_postconfig_ret=sai_postconfig_fstab && sai_postconfig_initcpio
 }
 
+sai_postconfig_initcpio() {
+	sai_chroot mkinitcpio -p linux
+}
+
+sai_postconfig_fstab() {
+	true
+}
 
 sai_bootloader() {
 	inform $FUNCNAME
 	sai_chroot /usr/sbin/syslinux-install_update -iam
 	sai_bootloader_ret=$?
 	vim "$DESTDIR/boot/syslinux/syslinux.cfg"
+}
+
+sai_report() {
+	inform "sai report"
+	is_ok "sai_prepare" $sai_prepare_ret
+	is_ok "sai_installpkgs" $sai_installpkgs_ret
+	is_ok "sai_config" $sai_config_ret
+	is_ok "sai_postconfig" $sai_postconfig_ret
+	is_ok "sai_bootloader" $sai_bootloader_ret
 }
 
 sai_end() {
@@ -44,9 +90,9 @@ sai_end() {
 
 
 sai_start
-sai_partition
+sai_prepare
 sai_installpkgs
 sai_config
-sai_initcpio
+sai_postconfig
 sai_bootloader
 sai_end
