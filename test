@@ -1,0 +1,7 @@
+#!/bin/bash
+
+source sai_lib
+
+
+find_partitions
+echo $PWD
