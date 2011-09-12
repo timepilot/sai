@@ -1,0 +1,52 @@
+#!/bin/bash
+
+DESTDIR="/mnt/sai_target"
+
+source /sai/sai_lib
+source /sai/sai_config
+
+sai_start() {
+	inform "welcome to sai"
+	chroot_mount
+}
+
+sai_partition() {
+	inform $FUNCNAME
+	cfdisk
+	sai_partition_ret=$?
+}
+
+sai_installpkgs() {
+	inform $FUNCNAME
+	pacman --root $DESTDIR --noconfirm -Sy "syslinux $(grep -v ^# /sai/packages.list)"
+	sai_installpkgs_ret=$?
+}
+
+sai_initcpio() {
+	inform $FUNCNAME
+	sai_chroot mkinitcpio -p linux
+	sai_initcpio_ret=$?
+}
+
+
+sai_bootloader() {
+	inform $FUNCNAME
+	sai_chroot /usr/sbin/syslinux-install_update -iam
+	sai_bootloader_ret=$?
+	vim "$DESTDIR/boot/syslinux/syslinux.cfg"
+}
+
+sai_end() {
+	chroot_umount
+	sai_report
+}
+
+
+
+sai_start
+sai_partition
+sai_installpkgs
+sai_config
+sai_initcpio
+sai_bootloader
+sai_end

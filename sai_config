@@ -1,0 +1,7 @@
+#!/bin/bash
+
+sai_config() {
+	inform $FUNCNAME
+	rc_conf DAEMONS "(dbus)"
+	sai_config_ret=0
+}
