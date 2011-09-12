@@ -4,6 +4,11 @@ FS='/tmp/sai_fs'
 FSTAB='/tmp/sai_fstab'
 LOG='/tmp/sai_log'
 
+# init files
+: > $FS
+: > $FSTAB
+: > $LOG
+
 source /sai/sai_lib
 source /sai/sai_config
 
@@ -13,13 +18,15 @@ sai_start() {
 
 sai_prepare() {
 	say $FUNCNAME
+	
+	umount_dest
 	# cfdisk
-	availdisks
-	ask "pick a disk to partition?"
+	avail_disks
+	ask "pick a disk to partition? (sai will call cfdisk) "
 	cfdisk "/dev/$ans"
 	
 	# mountpount
-	findpartitions
+	find_partitions
 	ask "select a partition for swap? (type 'no' if dont need one) "
 	if [ "$ans" != "no" ]; then
 		echo "/dev/$ans swap swap" >> $FS
@@ -40,7 +47,7 @@ sai_prepare() {
 		PART=$(echo $line | cut -d ' ' -f 1)
 		MP=$(echo $line | cut -d ' ' -f 2)
 		FSTYPE=$(echo $line | cut -d ' ' -f 3)
-		formatdisk $PART $MP $FSTYPE
+		format_disks $PART $MP $FSTYPE
 		sleep 1
 	done
 }
@@ -49,13 +56,15 @@ sai_installpkgs() {
 	say $FUNCNAME
 	ask "sai asks you to edit the packages you want to install. Hit 'enter' to continue."
 	vim /sai/packages.list
+	chroot_mount
 	pacman --root /mnt --noconfirm -Sy "syslinux $(grep -v ^# /sai/packages.list)"
+	chroot_umount
 }
 
 sai_postconfig() {
 	say $FUNCNAME
-	sai_chroot mkinitcpio -p linux
-	sort $FSTAB >> /mnt/etc/fstab
+	chroot /mnt mkinitcpio -p linux
+	sort $FSTAB > /mnt/etc/fstab
 }
 
 sai_bootloader() {

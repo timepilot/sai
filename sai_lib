@@ -13,17 +13,11 @@ ask() {
 	tput sgr0
 }
 
-sai_chroot() {
-	chroot_mount
-	chroot /mnt "$@"
-	chroot_umount
-}
-
 rc_conf() {
 	sed -i -e "s|^$1=.*|$1=$2|" /mnt/etc/rc.conf
 }
 
-formatdisk() {
+format_disks() {
 	local _device=$1
 	local _mp=$2
 	local _fstype=$3
@@ -56,16 +50,16 @@ formatdisk() {
 	fi
 }
 
-finddisks() {
+find_disks() {
 	workdir="$PWD"
 	cd /sys/block
 	ls | grep '^[hs]d'
 	cd "$workdir"
 }
 
-findpartitions() {
+find_partitions() {
 	workdir="$PWD"
-	for disk in $(finddisks); do
+	for disk in $(find_disks); do
 		cd /sys/block/$disk
 		for part in $disk*; do
 			if [ -d $part ]; then
@@ -75,14 +69,14 @@ findpartitions() {
 	done
 }
 
-disccapacity() {
+disk_capacity() {
 	fdisk -l $1 2>/dev/null | sed -n '2p' | cut -d ' ' -f5
 }
 
-availdisks() {
-	for disc in $(finddisks); do
-		size=$(disccapacity /dev/$disc)
-		echo "$disc: $((size / 2**20)) MiB ($((size / 2**30)) GiB)"
+avail_disks() {
+	for disk in $(find_disks); do
+		size=$(disk_capacity /dev/$disk)
+		echo "$disk: $((size / 2**20)) MiB ($((size / 2**30)) GiB)"
 	done
 }
 
@@ -103,6 +97,12 @@ chroot_mount() {
 #
 chroot_umount() {
 	umount /mnt/proc /mnt/sys /mnt/dev
+}
+
+umount_dest() {
+	swapoff -a
+	umount $(mount | grep -v '/mnt ' | grep '/mnt' | sed 's|\ .*||g')
+	umount $(mount | grep '/mnt ' | sed 's|\ .*||g')
 }
 
 search_device() {
