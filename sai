@@ -1,6 +1,5 @@
 #!/bin/bash
 
-DESTDIR='/mnt'
 FS='/tmp/sai_fs'
 FSTAB='/tmp/sai_fstab'
 LOG='/tmp/sai_log'
@@ -20,17 +19,17 @@ sai_prepare() {
 	cfdisk "/dev/$ans"
 	
 	# mountpount
-	availdisks
+	findpartitions
 	ask "select a partition for swap? (type 'no' if dont need one) "
 	if [ "$ans" != "no" ]; then
-		echo "$ans swap swap" >> $FS
+		echo "/dev/$ans swap swap" >> $FS
 	fi
 	ask "select a partition for '/'? "
-	echo "$ans / ext4" >> $FS
+	echo "/dev/$ans / ext4" >> $FS
 	
 	ask "select a partition for '/boot'? (type 'no' if dont need one) "
 	if [ "$ans" != "no" ]; then
-		echo "$ans /boot ext2" >> $FS
+		echo "/dev/$ans /boot ext2" >> $FS
 	fi
 	
 	ask "sai asks you to use 'vim' to double-check everything. Hit 'enter' to continue."
@@ -50,20 +49,22 @@ sai_installpkgs() {
 	say $FUNCNAME
 	ask "sai asks you to edit the packages you want to install. Hit 'enter' to continue."
 	vim /sai/packages.list
-	pacman --root $DESTDIR --noconfirm -Sy "syslinux $(grep -v ^# /sai/packages.list)"
+	pacman --root /mnt --noconfirm -Sy "syslinux $(grep -v ^# /sai/packages.list)"
 }
 
 sai_postconfig() {
 	say $FUNCNAME
 	sai_chroot mkinitcpio -p linux
-	sort $FSTAB >> $DESTDIR/etc/fstab
+	sort $FSTAB >> /mnt/etc/fstab
 }
 
 sai_bootloader() {
 	say $FUNCNAME
-	sai_chroot /usr/sbin/syslinux-install_update -iam
+	syslinux-install_update -iam -c /mnt
+	syslinuxmenu='/mnt/boot/syslinux/syslinux.cfg'
+	generate_syslinux_menu $(search_device '/')
 	ask "sai asks you to edit the bootloader menu. Hit 'enter' to continue."
-	vim $DESTDIR/boot/syslinux/syslinux.cfg
+	vim $syslinuxmenu
 }
 
 sai_end() {
