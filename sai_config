@@ -1,7 +1,6 @@
 #!/bin/bash
 
 sai_config() {
-	inform $FUNCNAME
-	rc_conf DAEMONS "(dbus)"
-	sai_config_ret=0
+	say $FUNCNAME
+	echo "sai has nothing to do here"
 }

@@ -1,4 +1,9 @@
 #!/bin/bash
 source sai_lib
 
-	availdisks
+cat >> 123 <<EOF
+
+
+123123 
+
+EOF
