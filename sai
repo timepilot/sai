@@ -21,8 +21,10 @@ sai_prepare() {
 	
 	# cfdisk
 	avail_disks
-	ask "pick a disk to partition? (sai will call cfdisk) "
-	cfdisk "/dev/$ans"
+	ask "pick a disk to partition? (type 'no' to skip) "
+	if [ "$ans" != "no" ]; then
+		cfdisk "/dev/$ans"
+	fi
 	
 	# mountpount
 	say "here is a list of partitions"
@@ -58,7 +60,7 @@ sai_installpkgs() {
 	vim /sai/packages.list
 	mkdir -p /mnt/var/lib/pacman
 	chroot_mount
-	pacman --root /mnt --noconfirm -Sy "syslinux $(grep -v ^# /sai/packages.list)"
+	pacman --root /mnt --noconfirm -Sy "$(grep -v ^# /sai/packages.list)"
 	chroot_umount
 }
 
