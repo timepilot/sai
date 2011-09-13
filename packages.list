@@ -1,4 +1,5 @@
 linux
 syslinux
+initscript
 vim
 pacman
