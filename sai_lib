@@ -21,22 +21,22 @@ yell() {
 }
 
 format_disks() {
-	local _part=$1
-	local _fstype=$2
-	case $_fstype in
+	local part=$1
+	local fstype=$2
+	case $fstype in
 		swap)
-			swapoff $_part
-			mkswap $_part
-			swapon $_part
+			swapoff $part
+			mkswap $part
+			swapon $part
 			;;
 		ext2)
-			mke2fs $_part
+			mke2fs $part
 			;;
 		ext3)
-			mke2fs -j $_part
+			mke2fs -j $part
 			;;
 		ext4)
-			mke2fs -t ext4 $_part
+			mke2fs -t ext4 $part
 			;;
 	esac
 	sleep 1
