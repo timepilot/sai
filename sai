@@ -60,7 +60,7 @@ sai_installpkgs() {
 	vim /sai/packages.list
 	mkdir -p /mnt/var/lib/pacman
 	chroot_mount
-	pacman --root /mnt --noconfirm -Sy "$(grep -v ^# /sai/packages.list)"
+	pacman --root /mnt --noconfirm -Sy $(grep -v ^# /sai/packages.list)
 	chroot_umount
 }
 
