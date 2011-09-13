@@ -48,22 +48,7 @@ sai_prepare() {
 	ask "sai asks you to use 'vim' to double-check everything. Hit 'enter' to continue."
 	vim $FS
 	
-	for line in $(cat $FS); do
-		part=$(echo $line | cut -d : -f 1)
-		mp=$(echo $line | cut -d : -f 2)
-		fstype=$(echo $line | cut -d : -f 3)
-		format_disks $part $fstype
-			
-		mkdir -p /mnt$mp
-		mount -t $fstype $part /mnt$mp
-		
-		echo -n "$part $mp $fstype defaults 0 " >> $FSTAB
-		if [ "$fstype" = "swap" ]; then
-			echo "0" >> $FSTAB
-		else
-			echo "1" >> $FSTAB
-		fi
-	done
+	prepare_disks
 }
 
 sai_installpkgs() {
