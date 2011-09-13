@@ -25,11 +25,13 @@ sai_prepare() {
 	cfdisk "/dev/$ans"
 	
 	# mountpount
+	say "here is a list of partitions"
 	find_partitions
 	ask "select a partition for swap? (type 'no' if dont need one) "
 	if [ "$ans" != "no" ]; then
 		echo "/dev/$ans:swap:swap" >> $FS
 	fi
+
 	ask "select a partition for '/'? "
 	echo "/dev/$ans:/:ext4" >> $FS
 	

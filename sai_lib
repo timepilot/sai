@@ -8,7 +8,7 @@ say() {
 
 ask() {
 	tput setaf 6
-	echo -n "!! $1? "
+	echo -n "!! $1 "
 	tput sgr0
 	read ans
 }
