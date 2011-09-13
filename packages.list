@@ -1,5 +1,2 @@
-linux
-syslinux
-initscripts
+base
 vim
-pacman
