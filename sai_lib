@@ -22,8 +22,7 @@ yell() {
 
 format_disks() {
 	local _device=$1
-	local _mp=$2
-	local _fstype=$3
+	local _fstype=$2
 	case $_fstype in
 		swap)
 			swapoff $_device
@@ -41,16 +40,6 @@ format_disks() {
 			;;
 	esac
 	sleep 1
-	
-	mkdir -p /mnt$_mp
-	mount -t $_fstype $_device /mnt$_mp
-	
-	echo -n "$_device $_mp $_fstype defaults 0 " >> $FSTAB
-	if [ "$_fstype" = "swap" ]; then
-		echo "0" >> $FSTAB
-	else
-		echo "1" >> $FSTAB
-	fi
 }
 
 find_disks() {
