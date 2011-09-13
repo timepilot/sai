@@ -9,8 +9,8 @@ say() {
 ask() {
 	tput setaf 6
 	echo -n "!! $1? "
-	read ans
 	tput sgr0
+	read ans
 }
 
 format_disks() {
