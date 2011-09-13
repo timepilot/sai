@@ -32,17 +32,18 @@ sai_prepare() {
 	tput rev
 	find_partitions
 	tput sgr0
-	ask "select a partition for swap? (type 'no' if dont need one)"
-	if [ "$ans" != "no" ]; then
-		echo "/dev/$ans:swap:swap" >> $FS
-	fi
-
+	
 	ask "select a partition for '/'?"
 	echo "/dev/$ans:/:ext4" >> $FS
 	
 	ask "select a partition for '/boot'? (type 'no' if dont need one)"
 	if [ "$ans" != "no" ]; then
 		echo "/dev/$ans:/boot:ext2" >> $FS
+	fi
+
+	ask "select a partition for swap? (type 'no' if dont need one)"
+	if [ "$ans" != "no" ]; then
+		echo "/dev/$ans:swap:swap" >> $FS
 	fi
 	
 	ask "sai asks you to use 'vim' to double-check everything. Hit 'enter' to continue."
