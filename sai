@@ -49,10 +49,20 @@ sai_prepare() {
 	vim $FS
 	
 	for line in $(cat $FS); do
-		PART=$(echo $line | cut -d : -f 1)
-		MP=$(echo $line | cut -d : -f 2)
-		FSTYPE=$(echo $line | cut -d : -f 3)
-		format_disks $PART $MP $FSTYPE
+		part=$(echo $line | cut -d : -f 1)
+		mp=$(echo $line | cut -d : -f 2)
+		fstype=$(echo $line | cut -d : -f 3)
+		format_disks $part $fstype
+			
+		mkdir -p /mnt$mp
+		mount -t $fstype $part /mnt$mp
+		
+		echo -n "$part $mp $fstype defaults 0 " >> $FSTAB
+		if [ "$fstype" = "swap" ]; then
+			echo "0" >> $FSTAB
+		else
+			echo "1" >> $FSTAB
+		fi
 	done
 }
 
