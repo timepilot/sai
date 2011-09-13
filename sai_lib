@@ -21,25 +21,45 @@ yell() {
 }
 
 format_disks() {
-	local _device=$1
+	local _part=$1
 	local _fstype=$2
 	case $_fstype in
 		swap)
-			swapoff $_device
-			mkswap $_device
-			swapon $_device
+			swapoff $_part
+			mkswap $_part
+			swapon $_part
 			;;
 		ext2)
-			mke2fs $_device
+			mke2fs $_part
 			;;
 		ext3)
-			mke2fs -j $_device
+			mke2fs -j $_part
 			;;
 		ext4)
-			mke2fs -t ext4 $_device
+			mke2fs -t ext4 $_part
 			;;
 	esac
 	sleep 1
+}
+
+prepare_disks() {
+	for line in $(cat $FS); do
+		part=$(echo $line | cut -d : -f 1)
+		mp=$(echo $line | cut -d : -f 2)
+		fstype=$(echo $line | cut -d : -f 3)
+
+		format_disks $part $fstype
+		
+		mkdir -p /mnt$mp
+		mount -t $fstype $part /mnt$mp
+		
+		echo -n "$part $mp $fstype defaults 0 " >> $FSTAB
+		if [ "$fstype" = "swap" ]; then
+			echo "0" >> $FSTAB
+		else
+			echo "1" >> $FSTAB
+		fi
+	done
 }
 
 find_disks() {
